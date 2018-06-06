@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript"> 	// Make the plot with x and y
+			function grafico(x,y){
+		      google.charts.load('current', {'packages':['corechart']});
+		      google.charts.setOnLoadCallback(drawChart);
+
+		      function drawChart() {
+		        var data = new google.visualization.DataTable();
+						data.addColumn('number', 'Position');
+					  data.addColumn('number', 'Polarization');
+
+						for(var i=0; i < xtot.length; i++){
+					          var row = [x[i], y[i]];
+					          data.addRow(row);
+					      }
+
+		        var options = {
+		          title: 'Company Performance',
+		          curveType: 'function',
+		          legend: { position: 'bottom' }
+		        };
+
+		        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+		        chart.draw(data, options);
+		      }
+				}
+    </script>
+
+		<script type="text/javascript">
+			//define coth, sinh, cosh
+			function coth(x) {
+				var y=1/Math.tanh(x);
+				return y;
+			}
+			//Make an array - equivalent of linspace() in matlab
+			function makeArr(startValue, stopValue, cardinality) {
+				var arr = [];
+				var currValue = startValue;
+				var step = (stopValue - startValue) / (cardinality - 1);
+				for (var i = 0; i < cardinality; i++) {
+					arr.push(currValue + (step * i));
+				}
+				return arr;
+			}
+			//multiply an array for a constant
+			function multArr(array, constant) {
+				mulipliedArr = array.map(function(element) {
+						return element*constant;
+							});
+				return mulipliedArr;
+			}
+
+			function addArr(array, constant) {
+				addedArr = array.map(function(element) {
+						return element+constant;
+							});
+				return addedArr;
+			}
+
+
+			function coshArr(array) {
+				coshedArr = array.map(function(element) {
+						return Math.cosh(element);
+							});
+				return coshedArr;
+			}
+
+			function sinhArr(array) {
+				coshedArr = array.map(function(element) {
+						return Math.sinh(element);
+						});
+				return coshedArr;
+			}
+
+			function subArrs(array1, array2) {
+					subedArr = array1.map(function(item, index) {
+					  return item - array2[index];
+						});
+					return subedArr;
+			}
+			//function for numerical integration numerically_integrate(left boundary, right boundary, trapezoids width, function to integrate)
+			function numerically_integrate(a, b, dx, f) {
+				// calculate the number of trapezoids
+				n = (b - a) / dx;
+				// define the variable for area
+				var Area = 0;
+				//calculate the area of each trapezoid and sum.
+				for (i = 1; i <= n; i++) {
+					x0 = a + (i-1)*dx;
+					x1 = a + i*dx;
+					Ai = dx * (f(x0) + f(x1))/ 2.;
+					Area = Area + Ai
+				}
+				return Area;
+			}
+		</script>
+
+		<script type="text/javascript">
+			//print a variable printvar(variable to print, id where to print it)
+			function printvar(variable, id) {
+				window.onload = (function () {
+								document.getElementById(id).innerHTML = variable;
+								}
+				)};
+		</script>
+
+		<script type="text/javascript">
+			var xstep = 100;
+			var length_target = 0.1;
+			var length_source = 0.1;
+			var epsilon0 = 200;
+			var Csource = 10;
+			var Ctarget = 70;
+			var T1source = 1;
+			var T1target = 10;
+
+			var length_total = length_target+length_source;
+			var Dsource = 5e-4*Math.pow((Csource/70), (1/3));
+			var Dtarget = 5e-4*Math.pow((Ctarget/70), (1/3));
+			var alpha = 1/Math.sqrt(Dtarget*T1target);
+			var beta = 1/Math.sqrt(Dsource*T1source);
+
+			var xtarget = makeArr(0,length_target,xstep);
+			var xsource = makeArr(length_target,length_total,xstep);
+			var xtot = xtarget.concat(xsource);
+
+			var lambda = beta*Csource*Dsource/(alpha*Ctarget*Dtarget);
+
+			var E = epsilon0-1;
+			var F = lambda*coth(alpha*length_target)*(Math.sinh(beta*length_target)-Math.cosh(beta*length_target)*Math.tanh(beta*length_total));
+			var G = -Math.cosh(beta*length_target)+Math.sinh(beta*length_target)*Math.tanh(beta*length_total);
+			var CIII = E/(F+G);
+
+			var A = epsilon0-1;
+			var B = CIII*(Math.cosh(beta*length_target)-Math.sinh(beta*length_target)*Math.tanh(beta*length_total));
+			var C = Math.cosh(alpha*length_target);
+			var CI = (A+B)/C;
+
+			var test=coshArr(multArr(xtarget,alpha));
+			var Ptarget=addArr(multArr(coshArr(multArr(xtarget,alpha)),CI),1)
+			var ps1 = coshArr(multArr(xsource,beta));
+			var ps2 = multArr(sinhArr(multArr(xsource,beta)),Math.tanh(beta*length_total));
+			var ps3 = subArrs(ps1,ps2);
+			var Psource = addArr(multArr(ps3,CIII),epsilon0);
+
+			var Ptot = Ptarget.concat(Psource);
+
+			grafico(xtot,Ptot)
+			//function Ptargetfunc(x){
+			//	return 1+CI*cosh(alpha*x);
+			//}
+			//var Etarget = numerically_integrate(0,length_target,Ptargetfunc,xstep)/xstep
+
+		</script>
+
+  </head>
+
+
+  <body>
+    <div id="curve_chart" style="width: 900px; height: 500px"></div>
+		<div>
+			<p id="var2print"></p>
+		</div>
+
+  </body>
+</html>

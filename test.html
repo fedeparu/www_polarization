@@ -1,0 +1,211 @@
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+	<script type="text/javascript">
+		//fuction to make an array
+		function makeArr(startValue, stopValue, cardinality) {
+		  var arr = [];
+		  var currValue = startValue;
+		  var step = (stopValue - startValue) / (cardinality - 1);
+		  for (var i = 0; i < cardinality; i++) {
+		    arr.push(currValue + (step * i));
+		  }
+		  return arr;
+		}
+		//fuction to multiply an array for a constant
+		function multArr(array, constant) {
+			mulipliedArr = array.map(function(element) {
+					return element*constant;
+						});
+		  return mulipliedArr;
+		}
+
+		//define coth, sinh, cosh
+		function coth(x) {
+		  var y=1/Math.tanh(x);
+		  return y;
+		}
+
+		function sinh(x) {
+		  var y=(Math.exp(x)-Math.exp(-x))/2;
+		  return y;
+		}
+
+		function cosh(x) {
+		  var y=(Math.exp(x)+Math.exp(-x))/2;
+		  return y;
+		}
+
+		function tanh(x) {
+		  var y=sinh(x)/cosh(x);
+		  return y;
+		}
+
+		//function for numerical integration numerically_integrate(left boundary, right boundary, trapezoids width, function to integrate)
+		function numerically_integrate(a, b, dx, f) {
+			// calculate the number of trapezoids
+			n = (b - a) / dx;
+			// define the variable for area
+			var Area = 0;
+			//calculate the area of each trapezoid and sum.
+			for (i = 1; i <= n; i++) {
+				x0 = a + (i-1)*dx;
+				x1 = a + i*dx;
+				Ai = dx * (f(x0) + f(x1))/ 2.;
+				Area = Area + Ai
+			}
+			return Area;
+		}
+
+		});
+	</script>
+
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript">
+	//fuction to make an array
+	function makeArr(startValue, stopValue, cardinality) {
+		var arr = [];
+		var currValue = startValue;
+		var step = (stopValue - startValue) / (cardinality - 1);
+		for (var i = 0; i < cardinality; i++) {
+			arr.push(currValue + (step * i));
+		}
+		return arr;
+	}
+	//fuction to multiply an array for a constant
+	function multArr(array, constant) {
+		mulipliedArr = array.map(function(element) {
+				return element*constant;
+					});
+		return mulipliedArr;
+	}
+
+	//define coth, sinh, cosh
+	function coth(x) {
+		var y=1/Math.tanh(x);
+		return y;
+	}
+
+	function sinh(x) {
+		var y=(Math.exp(x)-Math.exp(-x))/2;
+		return y;
+	}
+
+	function cosh(x) {
+		var y=(Math.exp(x)+Math.exp(-x))/2;
+		return y;
+	}
+
+	function tanh(x) {
+		var y=sinh(x)/cosh(x);
+		return y;
+	}
+
+	//function for numerical integration numerically_integrate(left boundary, right boundary, trapezoids width, function to integrate)
+	function numerically_integrate(a, b, dx, f) {
+		// calculate the number of trapezoids
+		n = (b - a) / dx;
+		// define the variable for area
+		var Area = 0;
+		//calculate the area of each trapezoid and sum.
+		for (i = 1; i <= n; i++) {
+			x0 = a + (i-1)*dx;
+			x1 = a + i*dx;
+			Ai = dx * (f(x0) + f(x1))/ 2.;
+			Area = Area + Ai
+		}
+		return Area;
+	}
+
+		var xstep = 100;
+		var length_target = 0.1;
+		var length_source = 0.1;
+		var epsilon0 = 200;
+		var Csource = 10;
+		var Ctarget = 70;
+		var T1source = 1;
+		var T1target = 10;
+		document.getElementById("test1").innerHTML = T1target;
+
+		var length_total = length_target+length_source;
+		var Dsource = 5e-4*(Csource/70)^(1/3);
+		var Dtarget = 5e-4*(Ctarget/70)^(1/3);
+		var alpha = 1/Math.sqrt(Dtarget*T1target);
+		var beta = 1/Math.sqrt(Dsource*T1source);
+
+		var xtarget = makeArr(0,length_target,xstep);
+		var xsource = makeArr(length_target,length_total,xstep);
+		var xtot = xtarget.concat(xsource);
+
+		var lambda = beta*Csource*Dsource/(alpha*Ctarget*Dtarget);
+
+		var E = epsilon0-1;
+		var F = lambda*coth(alpha*length_target)*(sinh(beta*length_target)-cosh(beta*length_target)*Math.tanh(beta*length_total));
+		var G = -cosh(beta*length_target)+sinh(beta*length_target)*Math.tanh(beta*length_total);
+		var CIII = E/(F+G);
+
+		var A = epsilon0-1;
+		var B = CIII*(cosh(beta*length_target)-sinh(beta*length_target)*Math.tanh(beta*length_total));
+		var C = cosh(alpha*length_target);
+		var CI = (A+B)/C;
+
+		var Ptarget = 1+CI*cosh(multArr(xtarget,alpha));
+		//define function to be integrated
+		function Ptargetfunc(x){
+			return 1+CI*cosh(alpha*x);
+		}
+		var Etarget = numerically_integrate(0,length_target,Ptargetfunc,xstep)/xstep
+
+		var Psource = epsilon0+CIII*(cosh(multArr(xsource,beta))-sinh(multArr(xsource,beta))*tanh(beta*length_total));
+		function Psourcefunc(x){
+			return epsilon0+CIII*(cosh(beta*x)-sinh(beta*x)*tanh(beta*length_total));;
+		}
+		var Esource = numerically_integrate(length_target,length_total,Psourcefunc,xstep)/xstep
+		var Ptot = Ptarget.concat(Psource);
+		document.getElementById("test").innerHTML = Ptot;
+
+		google.charts.load('current', {'packages':['corechart']}); // Load the Visualization API and the corechart package.
+	  google.charts.setOnLoadCallback(drawChart); // Set a callback to run when the Google Visualization API is loaded.
+
+	  function drawChart() {
+		  var data = new google.visualization.DataTable();
+			data.addColumn('number', 'Position');
+		  data.addColumn('number', 'Polarization');
+
+			for(var i=0; i < xtot.length; i++){
+		          var row = [xtot[i], Ptot[i]];
+		          data.addRow(row);
+		      }
+
+			var options = {
+		      chart: {
+		        title: 'Polarization'
+		      },
+		      width: 900,
+		      height: 500
+		    };
+
+			var chart = new google.charts.Line(document.getElementById('calculation'))
+			chart.draw(data, google.charts.Line.convertOptions(options));
+
+	    }
+
+	</script>
+</head>
+
+<body>
+
+<h2>Arthur's Equation</h2>
+<div id="test"></div>
+<div id="calculation"></div>
+<div id="test"></div>
+
+</body>
+</html>
